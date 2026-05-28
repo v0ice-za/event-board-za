@@ -1,0 +1,98 @@
+# generated: 2026-05-27
+# last_updated: 2026-05-28
+# project: event-board-za
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+#
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-05-27
+last_updated: 2026-05-28
+project: event-board-za
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+
+  # ─── Epic 1: Project Foundation ───────────────────────────────────────────
+  # Get the app shell compiling and running on device; Firebase schema and seed
+  # data in place; CI/CD pipeline running. No user-facing feature yet.
+  epic-1: in-progress
+  1-1-initialise-project-scaffold: done
+  1-2-configure-nativewind-v4-design-tokens: review
+  1-3-firebase-project-firestore-schema-seed-data: backlog
+  1-4-root-layout-providers-sdk-initialisation: backlog
+  1-5-cicd-pipeline: backlog
+  epic-1-retrospective: optional
+
+  # ─── Epic 2: Event Feed ───────────────────────────────────────────────────
+  # Users can open the app, browse JHB events in a full-bleed card feed,
+  # filter by category, and see loading/empty/error states throughout.
+  epic-2: backlog
+  2-1-categoryplaceholder-component: backlog
+  2-2-eventcard-skeletoncard-components: backlog
+  2-3-categorychip-chipsrow-components: backlog
+  2-4-empty-error-offline-states-usenetworkstate-hook: backlog
+  2-5-useevents-hook: backlog
+  2-6-event-feed-screen: backlog
+  epic-2-retrospective: optional
+
+  # ─── Epic 3: Event Detail & Ticketing ─────────────────────────────────────
+  # Users can tap any event card to see full details and tap Tickets to open
+  # the booking page in-app; back navigation returns to exact scroll position.
+  epic-3: backlog
+  3-1-useeventdetail-hook: backlog
+  3-2-webviewmodal-component: backlog
+  3-3-event-detail-screen: backlog
+  epic-3-retrospective: optional
+
+  # ─── Epic 4: Data Pipeline ────────────────────────────────────────────────
+  # Real JHB events from Quicket, Eventbrite, and Facebook Events automatically
+  # sync to Firestore on schedule with deduplication. Howler deferred to v1.1.
+  epic-4: backlog
+  4-1-cloud-functions-workspace-setup-firestoreclient-utility: backlog
+  4-2-normaliseevent-utility-full-implementation: backlog
+  4-3-syncquicket-cloud-function: backlog
+  4-4-synceventbrite-cloud-function: backlog
+  4-5-syncfacebookevents-cloud-function: backlog
+  epic-4-retrospective: optional
+
+  # ─── Epic 5: Monetisation & Release ──────────────────────────────────────
+  # App is monetised with banner and interstitial ads, instrumented with
+  # analytics and crash reporting, POPIA-compliant, and ready for store submission.
+  epic-5: backlog
+  5-1-adbannerunit-component-feed-banner-integration: backlog
+  5-2-interstitial-ad-integration: backlog
+  5-3-firebase-analytics-crashlytics: backlog
+  5-4-privacy-policy-popia-compliance: backlog
+  5-5-app-store-play-store-release-preparation: backlog
+  epic-5-retrospective: optional
