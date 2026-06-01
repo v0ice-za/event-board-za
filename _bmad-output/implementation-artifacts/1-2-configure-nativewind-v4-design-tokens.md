@@ -1,6 +1,6 @@
 # Story 1.2: Configure NativeWind v4 + Design Tokens
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -87,6 +87,17 @@ so that all components can use the project's colour palette and typography scale
   - [x] After visual confirmation, the placeholder text can remain (full feed screen is Story 2.6 scope)
   - [x] Run `npx expo run:ios` or `npx expo run:android` — **not** `expo start` (Expo Go cannot be used)
   - [x] Run `npx tsc --noEmit` and confirm zero TypeScript errors before marking story done
+
+### Review Findings (AI — 2026-05-31)
+
+- [ ] [Review][Decision] AC8 device verification unconfirmed — The story marks Task 12 complete but no screenshot, test output, or explicit sign-off exists in the diff confirming `bg-background text-text-primary` rendered with correct Dark Warm colours on a real device or simulator. Developer must confirm visual result.
+- [x] [Review][Patch] `useFonts` error not destructured — splash stuck permanently if fonts fail [app/_layout.tsx:16]
+- [x] [Review][Defer] `preventAutoHideAsync()` at module scope, no `.catch()` [app/_layout.tsx:13] — deferred, pre-existing Expo boilerplate pattern
+- [x] [Review][Defer] `Event.date` typed as plain `string` — no ISO 8601 enforcement at type level [types/event.ts:8] — deferred, Story 4.2 normaliseEvent boundary
+- [x] [Review][Defer] `Event.time` format undefined — `"19:00"` vs `"8PM"` vs full ISO not specified [types/event.ts:9] — deferred, Story 4.2 normaliseEvent boundary
+- [x] [Review][Defer] `CATEGORY_PLACEHOLDERS[unknown_category]` returns `undefined` at runtime [constants/categories.ts:17] — deferred, Story 2.1 consumer responsibility
+- [x] [Review][Defer] Gradient colors all near-black — no minimum contrast ratio enforced [constants/categories.ts:20-27] — deferred, Story 2.1 design pass
+- [x] [Review][Defer] `price: string | null` type allows `""` despite comment contract [types/event.ts:16] — deferred, Story 4.2 normaliseEvent boundary
 
 ## Dev Notes
 

@@ -1,5 +1,8 @@
 import '../global.css';
 import { Stack } from 'expo-router';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import MobileAds from '@/lib/mobileAds';
 import {
   useFonts,
   Inter_400Regular,
@@ -9,11 +12,13 @@ import {
 } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { queryClient } from '@/lib/queryClient';
+import '@/lib/firebase'; // side-effect: ensures Firebase auto-init fires before any Firestore hook
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -21,12 +26,22 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    void MobileAds().initialize();
+  }, []);
 
-  return <Stack />;
+  if (!fontsLoaded && !fontError) return null;
+
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
 }
