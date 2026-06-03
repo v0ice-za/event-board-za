@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "481882035559",
+    "project_id": "event-board-za",
+    "storage_bucket": "event-board-za.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481882035559:android:84efe782fee8bc775e8bc2",
+        "android_client_info": {
+          "package_name": "za.voicemijalkovic.eventboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAmWId4i_d5rFihezJGsxeUsYTXzn0Wno"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

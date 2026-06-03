@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-27
-last_updated: 2026-06-01project: event-board-za
+last_updated: 2026-06-02
+project: event-board-za
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -47,10 +48,10 @@ development_status:
   # data in place; CI/CD pipeline running. No user-facing feature yet.
   epic-1: in-progress
   1-1-initialise-project-scaffold: done
-  1-2-configure-nativewind-v4-design-tokens: in-progress
+  1-2-configure-nativewind-v4-design-tokens: review
   1-3-firebase-project-firestore-schema-seed-data: done
   1-4-root-layout-providers-sdk-initialisation: done
-  1-5-cicd-pipeline: ready-for-dev
+  1-5-cicd-pipeline: in-progress
   epic-1-retrospective: optional
 
   # ─── Epic 2: Event Feed ───────────────────────────────────────────────────
