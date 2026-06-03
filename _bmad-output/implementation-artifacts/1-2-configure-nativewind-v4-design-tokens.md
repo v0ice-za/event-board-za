@@ -1,6 +1,6 @@
 # Story 1.2: Configure NativeWind v4 + Design Tokens
 
-Status: review
+Status: done
 
 ## Story
 
@@ -98,6 +98,21 @@ so that all components can use the project's colour palette and typography scale
 - [x] [Review][Defer] `CATEGORY_PLACEHOLDERS[unknown_category]` returns `undefined` at runtime [constants/categories.ts:17] — deferred, Story 2.1 consumer responsibility
 - [x] [Review][Defer] Gradient colors all near-black — no minimum contrast ratio enforced [constants/categories.ts:20-27] — deferred, Story 2.1 design pass
 - [x] [Review][Defer] `price: string | null` type allows `""` despite comment contract [types/event.ts:16] — deferred, Story 4.2 normaliseEvent boundary
+
+### Review Findings (bmad-code-review — 2026-06-03)
+
+- [x] [Review][Patch] `AdMob().initialize()` rejection silently swallowed — add `.catch()` [app/_layout.tsx:34]
+- [x] [Review][Patch] `SplashScreen.hideAsync()` rejection unhandled in `useEffect` — add `.catch()` [app/_layout.tsx:29]
+- [x] [Review][Patch] `event.going &&` renders bare `0` as RN text node — use `event.going > 0 &&` [app/index.tsx]
+- [x] [Review][Defer] `app/index.tsx` uses `style={{}}` with hardcoded hex values instead of `className` [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] `event.image` doesn't match canonical `Event.imageUrl` field [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] `event.title` doesn't match canonical `Event.name` field [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] Local `type Event = typeof EVENTS[number]` instead of importing from `@/types` [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] Local `CATEGORY_META` duplicates `CATEGORY_VALUES`/`CATEGORY_PLACEHOLDERS` [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] Font families hardcoded instead of using `FONT_FAMILY` constants [app/index.tsx] — deferred, stub screen replaced by Story 2.6
+- [x] [Review][Defer] AC8 visual confirmation unverifiable — no device available; bundle compiles clean — deferred, developer must verify on first native build
+- [x] [Review][Defer] `event.going` and `event.badge` absent from canonical `Event` type [types/event.ts] — deferred, Story 2.6 evaluation
+- [x] [Review][Defer] Static stub event dates bypass past-event filtering [app/index.tsx] — deferred, stub data only; Story 2.6 uses real data
 
 ## Dev Notes
 

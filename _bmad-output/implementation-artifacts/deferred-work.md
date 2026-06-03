@@ -12,6 +12,15 @@
 - `normaliseEvent` return type is `null` literal, not `NormalisedEvent | null` [functions/src/lib/normaliseEvent.ts:3] — full type belongs in Story 4.2
 - `.gitignore` `scripts/service-account.json` entry is case-exact — theoretical staging risk on case-insensitive filesystems (macOS/Windows) [.gitignore]
 
+## Deferred from: code review of 1-2-configure-nativewind-v4-design-tokens (2026-06-03)
+
+- `app/index.tsx` uses `style={{}}` with hardcoded hex values instead of `className` — stub screen, Story 2.6 will replace entirely
+- `event.image` / `event.title` field names don't match canonical `Event.imageUrl` / `Event.name` — stub screen field mismatch, Story 2.6
+- Local `type Event`, `CATEGORY_META`, and hardcoded font families in `app/index.tsx` — stub screen divergence, Story 2.6
+- AC8 visual on-device confirmation unverifiable — no device available; bundle compiles clean; developer must verify on first native build
+- `event.going` and `event.badge` absent from canonical `Event` type — stub fields to evaluate in Story 2.6 feed design
+- Static stub event dates bypass past-event filtering — stub data only; Story 2.6 uses real Firestore data
+
 ## Deferred from: code review of 1-2-configure-nativewind-v4-design-tokens (2026-05-31)
 
 - `preventAutoHideAsync()` at module scope with no `.catch()` [app/_layout.tsx:13] — standard Expo boilerplate pattern; risk is negligible in practice

@@ -183,7 +183,7 @@ function EventCard({ event, hero = false }: { event: Event; hero?: boolean }) {
               {CATEGORY_META[event.category]?.icon} {event.category}
             </Text>
           </View>
-          {event.going && (
+          {event.going > 0 && (
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(245,240,232,0.6)' }}>
               🔥 {event.going.toLocaleString()} going
             </Text>
