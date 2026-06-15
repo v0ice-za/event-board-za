@@ -1,6 +1,6 @@
 # Story 1.5: CI/CD Pipeline
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -19,45 +19,45 @@ So that every PR is automatically validated with type-checking and tests, and pr
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install Jest testing infrastructure (AC: 1)
-  - [ ] Run `npx expo install jest-expo jest @testing-library/react-native` — Expo-compatible versions
-  - [ ] Verify `jest-expo`, `jest`, `@testing-library/react-native` appear in `devDependencies` in `package.json`
+- [x] Task 1: Install Jest testing infrastructure (AC: 1)
+  - [x] Run `npx expo install jest-expo jest @testing-library/react-native` — Expo-compatible versions
+  - [x] Verify `jest-expo`, `jest`, `@testing-library/react-native` appear in `devDependencies` in `package.json`
 
-- [ ] Task 2: Configure Jest (AC: 1)
-  - [ ] Create `jest.config.js` at project root — see exact shape in Dev Notes
-  - [ ] Add `"test": "jest --passWithNoTests"` to `scripts` in `package.json`
-  - [ ] Run `npm test` locally — confirm passes (no tests yet, `--passWithNoTests` ensures clean exit)
+- [x] Task 2: Configure Jest (AC: 1)
+  - [x] Create `jest.config.js` at project root — see exact shape in Dev Notes
+  - [x] Add `"test": "jest --passWithNoTests"` to `scripts` in `package.json`
+  - [x] Run `npm test` locally — confirm passes (no tests yet, `--passWithNoTests` ensures clean exit)
 
-- [ ] Task 3: Create `.github/workflows/ci.yml` (AC: 1, 6)
-  - [ ] Create `.github/` directory and `workflows/` subdirectory (first-time setup)
-  - [ ] Write `ci.yml` — see exact shape in Dev Notes
-  - [ ] Workflow triggers: `pull_request` targeting `main`; runs `npm ci` → `tsc --noEmit` → `jest --passWithNoTests`
+- [x] Task 3: Create `.github/workflows/ci.yml` (AC: 1, 6)
+  - [x] Create `.github/` directory and `workflows/` subdirectory (first-time setup)
+  - [x] Write `ci.yml` — see exact shape in Dev Notes
+  - [x] Workflow triggers: `pull_request` targeting `main`; runs `npm ci` → `tsc --noEmit` → `jest --passWithNoTests`
 
-- [ ] Task 4: Create `eas.json` (AC: 2, 5)
-  - [ ] Create `eas.json` at project root — see exact shape in Dev Notes
-  - [ ] Three profiles: `development` (dev client, internal distribution), `preview` (internal distribution), `production` (autoIncrement)
-  - [ ] Both iOS and Android are implicitly covered by not restricting `platforms` at the profile level
+- [x] Task 4: Create `eas.json` (AC: 2, 5)
+  - [x] Create `eas.json` at project root — see exact shape in Dev Notes
+  - [x] Three profiles: `development` (dev client, internal distribution), `preview` (internal distribution), `production` (autoIncrement)
+  - [x] Both iOS and Android are implicitly covered by not restricting `platforms` at the profile level
 
-- [ ] Task 5: Update `app.config.ts` for EAS Secrets (AC: 3)
-  - [ ] Add `extra` field that reads API keys from `process.env` with `?? ''` fallback — see exact shape in Dev Notes
-  - [ ] Three keys: `QUICKET_API_KEY`, `EVENTBRITE_API_KEY`, `FACEBOOK_APP_TOKEN`
-  - [ ] Confirm `npx tsc --noEmit` still passes after changes
+- [x] Task 5: Update `app.config.ts` for EAS Secrets (AC: 3)
+  - [x] Add `extra` field that reads API keys from `process.env` with `?? ''` fallback — see exact shape in Dev Notes
+  - [x] Three keys: `QUICKET_API_KEY`, `EVENTBRITE_API_KEY`, `FACEBOOK_APP_TOKEN`
+  - [x] Confirm `npx tsc --noEmit` still passes after changes
 
-- [ ] Task 6: Configure EAS project and Secrets (AC: 4, 5)
-  - [ ] Run `eas build:configure` if `eas.json` not yet linked to an EAS project; or verify via `eas whoami`
-  - [ ] Run `eas secret:create --scope project --name QUICKET_API_KEY --value placeholder` (placeholder value; real key added before Epic 4)
-  - [ ] Run `eas secret:create --scope project --name EVENTBRITE_API_KEY --value placeholder`
-  - [ ] Run `eas secret:create --scope project --name FACEBOOK_APP_TOKEN --value placeholder`
-  - [ ] Verify `eas secret:list` shows all three secrets
-  - [ ] **HALT** if `eas-cli` is not authenticated — run `eas login` first and ask user to complete auth
+- [x] Task 6: Configure EAS project and Secrets (AC: 4, 5)
+  - [x] Run `eas build:configure` if `eas.json` not yet linked to an EAS project; or verify via `eas whoami` — project linked (`extra.eas.projectId` present); `eas whoami` → `voiceza`
+  - [x] Create `QUICKET_API_KEY` placeholder secret (used `eas env:create` — `eas secret:create` is deprecated)
+  - [x] Create `EVENTBRITE_API_KEY` placeholder secret
+  - [x] Create `FACEBOOK_APP_TOKEN` placeholder secret
+  - [x] Verify all three secrets exist (`eas env:list production` shows all three as `secret` visibility)
+  - [x] **HALT** if `eas-cli` is not authenticated — N/A, authenticated as `voiceza`
 
 - [ ] Task 7: Verify end-to-end (AC: 1, 5, 6)
-  - [ ] Run `npx tsc --noEmit` — zero errors
-  - [ ] Run `npm test` — passes (--passWithNoTests; no tests exist yet)
-  - [ ] Run `eas build --platform all --profile production --non-interactive --dry-run` or confirm `eas.json` validates cleanly — no config errors
-  - [ ] Commit all new/modified files; push to `main` (or open a PR if working on a branch)
-  - [ ] Verify GitHub Actions run appears in the repo's Actions tab and `ci.yml` completes green
-  - [ ] **HALT** if no GitHub remote is configured — inform user to push repo to GitHub first; this AC cannot be verified locally
+  - [x] Run `npx tsc --noEmit` — zero errors
+  - [x] Run `npm test` — passes (--passWithNoTests; no tests exist yet)
+  - [x] Confirm `eas.json` validates cleanly — `eas config --profile production` resolves with no config errors for ios and android
+  - [x] Commit all new/modified files; push to `main` — files already committed in `8a7fe9a` and present on `origin/main`
+  - [ ] Verify GitHub Actions run appears in the repo's Actions tab and `ci.yml` completes green — **BLOCKED:** see AC6 note below
+  - [x] **HALT** if no GitHub remote is configured — N/A, `origin` → `github.com/v0ice-za/event-board-za`
 
 ## Dev Notes
 
@@ -335,7 +335,7 @@ Modified files:
 
 ### Agent Model Used
 
-claude-sonnet-4-6 (create-story)
+claude-sonnet-4-6 (create-story); claude-opus-4-8 (dev-story)
 
 ### Debug Log References
 
@@ -343,12 +343,22 @@ None.
 
 ### Completion Notes List
 
-(to be filled by dev agent)
+- All file artifacts (`ci.yml`, `eas.json`, `jest.config.js`, `app.config.ts` `extra`, `package.json` Jest stack) were already authored and committed in `8a7fe9a` by a prior session, exactly matching the Dev Notes spec — verified byte-for-byte, no changes needed.
+- Task 6 (EAS Secrets) was the main outstanding work: created the three placeholder secrets via `eas env:create --scope project --visibility secret` across `production`/`preview`/`development` environments. Note `eas secret:create` from the original Dev Notes is deprecated in eas-cli 20.x; `eas env:create` is the current equivalent. Verified via `eas env:list production`.
+- Local verification (AC1/AC3/AC5): `npx tsc --noEmit` → 0 errors; `npm test` → passes (`--passWithNoTests`, no tests yet); `eas config --profile production` resolves cleanly for both ios and android (no config errors).
+- EAS project is linked: `extra.eas.projectId` = `48b701cb-...` present in `app.config.ts`; `eas whoami` → `voiceza`.
+- **AC6 outstanding:** `ci.yml` triggers only on `pull_request` → `main`, but all story files are already merged to `main`, so CI has never had a PR to run against. Demonstrating "CI completes green" requires opening a PR to `main` and observing the Actions tab. `gh` CLI is not installed in this environment, so this step cannot be completed or observed locally — handed to user for a decision (see below). Story held at `in-progress` pending AC6.
 
 ### File List
 
-(to be filled by dev agent)
+- `.github/workflows/ci.yml` (new — committed in 8a7fe9a)
+- `eas.json` (new — committed in 8a7fe9a)
+- `jest.config.js` (new — committed in 8a7fe9a)
+- `app.config.ts` (modified — `extra` API keys + `eas.projectId`; committed in 8a7fe9a)
+- `package.json` (modified — `test` script + Jest devDependencies; committed in 8a7fe9a)
+- EAS project secrets (cloud-side, not in repo): `QUICKET_API_KEY`, `EVENTBRITE_API_KEY`, `FACEBOOK_APP_TOKEN`
 
 ### Change Log
 
 - 2026-06-01: Story 1.5 created
+- 2026-06-15: Verified all file artifacts match spec; created 3 EAS placeholder secrets; ran local validations (tsc, jest, eas config) — all pass. AC6 (CI green on a PR) blocked pending user decision; story held at in-progress.
