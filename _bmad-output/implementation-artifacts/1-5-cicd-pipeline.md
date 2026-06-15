@@ -1,6 +1,6 @@
 # Story 1.5: CI/CD Pipeline
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -51,13 +51,17 @@ So that every PR is automatically validated with type-checking and tests, and pr
   - [x] Verify all three secrets exist (`eas env:list production` shows all three as `secret` visibility)
   - [x] **HALT** if `eas-cli` is not authenticated — N/A, authenticated as `voiceza`
 
-- [ ] Task 7: Verify end-to-end (AC: 1, 5, 6)
+- [x] Task 7: Verify end-to-end (AC: 1, 5, 6)
   - [x] Run `npx tsc --noEmit` — zero errors
   - [x] Run `npm test` — passes (--passWithNoTests; no tests exist yet)
   - [x] Confirm `eas.json` validates cleanly — `eas config --profile production` resolves with no config errors for ios and android
-  - [x] Commit all new/modified files; push to `main` — files already committed in `8a7fe9a` and present on `origin/main`
-  - [ ] Verify GitHub Actions run appears in the repo's Actions tab and `ci.yml` completes green — **BLOCKED:** see AC6 note below
+  - [x] Commit all new/modified files; push to `main` — pushed `799e9e4` (push trigger) + `d687a28` (lock sync)
+  - [x] Verify GitHub Actions run appears in the repo's Actions tab and `ci.yml` completes green — run `27574628931` on `main` (d687a28) **completed green**; Install/TypeScript check/Jest all success
   - [x] **HALT** if no GitHub remote is configured — N/A, `origin` → `github.com/v0ice-za/event-board-za`
+
+- [x] Task 8 (added during dev): Make CI runnable + green on main (AC: 6)
+  - [x] Added `push: branches: [main]` trigger to `ci.yml` (user-approved deviation from PR-only spec) so CI can be exercised on the already-merged main branch
+  - [x] Fixed out-of-sync `package-lock.json` (Jest/testing-library deps were missing from lock → `npm ci` failed); regenerated via `npm install`, verified `npm ci` passes locally and in CI
 
 ## Dev Notes
 
@@ -347,18 +351,23 @@ None.
 - Task 6 (EAS Secrets) was the main outstanding work: created the three placeholder secrets via `eas env:create --scope project --visibility secret` across `production`/`preview`/`development` environments. Note `eas secret:create` from the original Dev Notes is deprecated in eas-cli 20.x; `eas env:create` is the current equivalent. Verified via `eas env:list production`.
 - Local verification (AC1/AC3/AC5): `npx tsc --noEmit` → 0 errors; `npm test` → passes (`--passWithNoTests`, no tests yet); `eas config --profile production` resolves cleanly for both ios and android (no config errors).
 - EAS project is linked: `extra.eas.projectId` = `48b701cb-...` present in `app.config.ts`; `eas whoami` → `voiceza`.
-- **AC6 outstanding:** `ci.yml` triggers only on `pull_request` → `main`, but all story files are already merged to `main`, so CI has never had a PR to run against. Demonstrating "CI completes green" requires opening a PR to `main` and observing the Actions tab. `gh` CLI is not installed in this environment, so this step cannot be completed or observed locally — handed to user for a decision (see below). Story held at `in-progress` pending AC6.
+- **AC6 resolved (with two follow-on fixes):** `ci.yml` originally triggered only on `pull_request` → `main`, but all story files were already merged to `main`, so CI had never run. User approved adding a `push: branches: [main]` trigger (deviation from the PR-only spec shape in Dev Notes) to exercise CI on main.
+  - First push (`799e9e4`) triggered CI but it **failed at `npm ci`**: `package-lock.json` was out of sync with `package.json` (Jest/`@testing-library` deps present in `package.json` but missing from the lock). Regenerated the lock with `npm install`, confirmed `npm ci` passes locally.
+  - Second push (`d687a28`) → CI run `27574628931` on `main` **completed green** (Install / TypeScript check / Jest all success). AC6 satisfied.
+  - `gh` CLI is not installed; CI results were observed via the public GitHub Actions REST API.
 
 ### File List
 
-- `.github/workflows/ci.yml` (new — committed in 8a7fe9a)
+- `.github/workflows/ci.yml` (new in 8a7fe9a; modified in 799e9e4 — added `push: branches: [main]` trigger)
 - `eas.json` (new — committed in 8a7fe9a)
 - `jest.config.js` (new — committed in 8a7fe9a)
 - `app.config.ts` (modified — `extra` API keys + `eas.projectId`; committed in 8a7fe9a)
 - `package.json` (modified — `test` script + Jest devDependencies; committed in 8a7fe9a)
+- `package-lock.json` (modified in d687a28 — synced with package.json so `npm ci` passes)
 - EAS project secrets (cloud-side, not in repo): `QUICKET_API_KEY`, `EVENTBRITE_API_KEY`, `FACEBOOK_APP_TOKEN`
 
 ### Change Log
 
 - 2026-06-01: Story 1.5 created
-- 2026-06-15: Verified all file artifacts match spec; created 3 EAS placeholder secrets; ran local validations (tsc, jest, eas config) — all pass. AC6 (CI green on a PR) blocked pending user decision; story held at in-progress.
+- 2026-06-15: Verified all file artifacts match spec; created 3 EAS placeholder secrets; ran local validations (tsc, jest, eas config) — all pass.
+- 2026-06-15: Added `push: branches: [main]` trigger to ci.yml (user-approved); fixed out-of-sync package-lock.json. CI run 27574628931 on main completed green — AC6 satisfied. Status → review.
