@@ -25,3 +25,11 @@ export const CATEGORY_PLACEHOLDERS: Record<CategoryKey, { colors: [string, strin
   'Family':       { colors: ['#001a0d', '#003320'], emoji: '👨‍👩‍👧' },
   'Nightlife':    { colors: ['#0d0020', '#200040'], emoji: '🌃' },
 };
+
+// Neutral fallback for categories not present in CATEGORY_PLACEHOLDERS.
+// CategoryPlaceholder uses this when an event arrives (from external feeds) with an
+// unmapped/unknown category, so the card never crashes on a missing map entry.
+export const FALLBACK_PLACEHOLDER: { colors: [string, string]; emoji: string } = {
+  colors: ['#1a1a1a', '#333333'],
+  emoji: '🎟️',
+};

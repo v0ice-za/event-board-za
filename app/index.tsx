@@ -242,7 +242,7 @@ export default function FeedScreen() {
               Event Board ZA
             </Text>
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#8A7E70', marginTop: 2 }}>
-              📍 Johannesburg · What's on this week
+              📍 Johannesburg · What&apos;s on this week
             </Text>
           </View>
           <TouchableOpacity style={{

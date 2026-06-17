@@ -1,6 +1,6 @@
 # Story 1.5: CI/CD Pipeline
 
-Status: review
+Status: done
 
 ## Story
 
@@ -363,7 +363,11 @@ None.
 - `jest.config.js` (new — committed in 8a7fe9a)
 - `app.config.ts` (modified — `extra` API keys + `eas.projectId`; committed in 8a7fe9a)
 - `package.json` (modified — `test` script + Jest devDependencies; committed in 8a7fe9a)
-- `package-lock.json` (modified in d687a28 — synced with package.json so `npm ci` passes)
+- `package-lock.json` (modified in d687a28 — synced; re-synced 2026-06-16 after jest pin)
+- `package.json` (modified 2026-06-16 — `jest` pinned `~29.7.0`; added `@types/jest`)
+- `.github/workflows/ci.yml` (modified 2026-06-16 — added `concurrency` + `timeout-minutes`)
+- `jest-env.d.ts` (**new** 2026-06-16 — ambient jest global types for `tsc`)
+- `tsconfig.json` (modified 2026-06-16 — added `jest-env.d.ts` to `include`)
 - EAS project secrets (cloud-side, not in repo): `QUICKET_API_KEY`, `EVENTBRITE_API_KEY`, `FACEBOOK_APP_TOKEN`
 
 ### Change Log
@@ -371,3 +375,24 @@ None.
 - 2026-06-01: Story 1.5 created
 - 2026-06-15: Verified all file artifacts match spec; created 3 EAS placeholder secrets; ran local validations (tsc, jest, eas config) — all pass.
 - 2026-06-15: Added `push: branches: [main]` trigger to ci.yml (user-approved); fixed out-of-sync package-lock.json. CI run 27574628931 on main completed green — AC6 satisfied. Status → review.
+- 2026-06-16: Code review (3-layer adversarial). 1 decision-needed (lint → deferred to Story 2.1), 4 patches (all applied & verified), 4 deferred, 7 dismissed. Fixed jest@30→~29.7 incompatibility (CI Jest gate was hollow under `--passWithNoTests`), added jest global types (`@types/jest` + `jest-env.d.ts`), CI `concurrency` + `timeout-minutes`. Local verify: tsc 0 errors, jest exit 0, `npm ci` in sync. Status review → done.
+
+### Review Findings
+
+_Code review 2026-06-16 — Blind Hunter + Edge Case Hunter + Acceptance Auditor. All 6 ACs pass as written, but the Jest harness is effectively broken (masked by `--passWithNoTests` over an empty suite); AC6's "green" is a false positive that will flip red the moment the first real test lands (Epic 2)._
+
+**Decision needed** — resolved 2026-06-16: deferred to Story 2.1 (see Deferred).
+
+**Patches** — all applied & verified 2026-06-16 (tsc 0 errors · jest exit 0 · `npm ci` in sync)
+
+- [x] [Review][Patch] `jest@^30` incompatible with `jest-expo@^56` (targets jest 29) — Edge Hunter reproduced an instant crash. **Fixed:** pinned `jest` to `~29.7.0`; regenerated `package-lock.json` (removed the stray jest@30 tree, 239 pkgs). Verified with a throwaway RTL smoke test (now passes; harness boots). [package.json]
+- [x] [Review][Patch] Test files wouldn't typecheck under `tsc --noEmit` — `@types/jest` absent and Expo's `moduleResolution: bundler` base does not auto-include it. **Fixed:** added `@types/jest@^29.5.14` **plus** ambient `jest-env.d.ts` (`/// <reference types="jest" />`) wired into `tsconfig.json` `include` — bare `test`/`expect` globals now resolve project-wide (a bare dep add alone was insufficient; verified). [package.json · jest-env.d.ts · tsconfig.json]
+- [x] [Review][Patch] No `concurrency` + `push`/`pull_request` both on `main` double-ran CI and stacked stale runs. **Fixed:** added `concurrency` block keyed on workflow+ref with `cancel-in-progress: true`. [.github/workflows/ci.yml:9-11]
+- [x] [Review][Patch] No `timeout-minutes` on the CI job (360-min default). **Fixed:** added `timeout-minutes: 15`. [.github/workflows/ci.yml:13]
+
+**Deferred** (pre-existing or out of scope for Story 1.5)
+
+- [x] [Review][Defer] AdMob plugin ships Google **test** App IDs in the `production` profile — zero ad revenue if released as-is [app.config.ts:55-56] — belongs to Epic 5 (Story 5.1/5.5 release prep)
+- [x] [Review][Defer] `extra.*ApiKey ?? ''` bakes empty strings into all EAS profiles with no non-empty validation for `production` — silent credential-less builds [app.config.ts:35-37] — real key wiring + validation belongs to Epic 4 (Stories 4.3–4.5)
+- [x] [Review][Defer] `@react-native/jest-preset` added to devDependencies but absent from the story File List and the spec's "only these three packages" constraint — redundant (jest-expo pulls it transitively), harmless [package.json:40] — document or remove
+- [x] [Review][Defer] CI has no `lint` gate — `expo lint` currently errors because `components/` holds only `.gitkeep` (ESLint 9: "all files matching the glob are ignored"); self-resolves once Story 2.1 adds component files [.github/workflows/ci.yml] — add lint step in Story 2.1 after verifying `npm run lint` passes

@@ -1,5 +1,21 @@
 # Deferred Work
 
+## Deferred from: code review of 2-2-eventcard-skeletoncard-components (2026-06-16)
+
+- SkeletonCard ignores reduced-motion preferences — a constantly pulsing shimmer should pause/soften when `AccessibilityInfo.isReduceMotionEnabled()` is true. Out of Story 2.2 AC scope; a future accessibility polish tied to NFR-4 (consider doing it across all animated components, incl. EventCard press scale) [components/SkeletonCard.tsx]
+
+## Deferred from: code review of 2-1-categoryplaceholder-component (2026-06-16)
+
+- AC #4 on-device visual verification of all 8 placeholder variants — no iOS/Android simulator in this environment; includes the gradient/emoji contrast "design pass" originally deferred to Story 2.1 (see 2026-05-31 entry below). Must be eyeballed on a real device during release/QA [components/CategoryPlaceholder.tsx]
+- Unit tests don't assert NativeWind `className` styling actually applies (full-bleed `absolute inset-0`, `text-[32px]`) — `className`-only project rule precludes a `style` fallback; visual correctness is covered by the AC #4 on-device check, not the Jest suite [components/CategoryPlaceholder.test.tsx]
+
+## Deferred from: code review of 1-5-cicd-pipeline (2026-06-16)
+
+- AdMob plugin ships Google **test** App IDs in the `production` profile — zero ad revenue if released as-is [app.config.ts:55-56] — belongs to Epic 5 (Story 5.1/5.5 release prep)
+- `extra.*ApiKey ?? ''` bakes empty strings into all EAS build profiles with no non-empty validation for `production` — silent credential-less builds [app.config.ts:35-37] — real key wiring + validation belongs to Epic 4 (Stories 4.3–4.5)
+- `@react-native/jest-preset` added to devDependencies but absent from the story File List and the spec's "only these three packages" constraint — redundant (jest-expo pulls it in transitively), harmless [package.json:40] — document or remove
+- Add a `lint` step to `ci.yml` once `components/` has real source files — `expo lint` errors today because the dir holds only `.gitkeep` (ESLint 9: all matched files ignored). Verify `npm run lint` passes, then add the gate in **Story 2.1** [.github/workflows/ci.yml]
+
 ## Deferred from: code review of 1-4-root-layout-providers-sdk-initialisation (2026-06-01)
 
 - AdMob `MobileAds().initialize()` called before user consent on GDPR/POPIA devices [app/_layout.tsx:34] — consent flow belongs to Story 5.4 POPIA compliance
