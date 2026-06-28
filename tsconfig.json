@@ -15,5 +15,11 @@
     "expo-env.d.ts",
     "nativewind-env.d.ts",
     "jest-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".expo",
+    "functions"
   ]
 }
