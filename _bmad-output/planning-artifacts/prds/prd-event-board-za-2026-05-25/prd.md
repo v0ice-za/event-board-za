@@ -314,7 +314,7 @@ The app must comply with the Protection of Personal Information Act (South Afric
 
 ## 12. Open Questions
 
-1. **OQ-1 [BLOCKER]: Data sourcing** — How does event data get into the system? Candidates: Quicket/Eventbrite public APIs, web scraping (legal risk, maintenance burden), manual curation, organiser submissions, or a hybrid. This must be resolved before architecture and build begin. All Feed FRs depend on it.
+1. **OQ-1 [RESOLVED]: Data sourcing** — How does event data get into the system? Candidates: Quicket/Eventbrite public APIs, web scraping (legal risk, maintenance burden), manual curation, organiser submissions, or a hybrid. **Resolved 2026-06-25:** v1 uses **Quicket only** (programmatic). Eventbrite and Facebook public event-discovery APIs no longer exist (removed by the providers), so both are deferred to v1.1 alongside Howler. Eventbrite/Facebook remain valid as Ticket-Link destinations and v2 affiliate candidates. See `sprint-change-proposal-2026-06-25.md`.
 2. **OQ-2: Content quality bar** — Is every submitted/scraped event published, or is there a moderation/curation step? Who owns this operationally?
 3. **OQ-3: Event data freshness** — How often does the event data refresh? What happens when an event is cancelled or rescheduled after a user has viewed it?
 4. **OQ-4: Ad SDK selection** — Google AdMob is the default assumption. Alternatives (Meta Audience Network, AppLovin) should be evaluated for SA market fill rates before build.

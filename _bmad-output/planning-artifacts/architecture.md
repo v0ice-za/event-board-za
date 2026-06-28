@@ -112,7 +112,7 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
-- OQ-1 resolved: Hybrid data sourcing via Quicket + Eventbrite + Facebook Events + Howler (pending API contact)
+- OQ-1 resolved (revised 2026-06-25): Quicket is the sole v1 programmatic source. Eventbrite + Facebook Events deferred to v1.1 — their public event-discovery APIs were removed by the providers. Howler deferred to v1.1 (pending API contact). See `sprint-change-proposal-2026-06-25.md`.
 - Backend: Firebase (Firestore + Cloud Functions) — budget-safe, never pauses on free tier
 - App data access: react-native-firebase SDK reads Firestore directly (no REST layer)
 - Styling: NativeWind v4 — fast visual iteration for design-centric app
@@ -124,6 +124,7 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 - API keys never in app bundle: stored in Cloud Functions environment via EAS Secrets
 
 **Deferred (Post-MVP):**
+- Eventbrite + Facebook Events sourcing: their public event-discovery APIs were removed by the providers (Eventbrite Search API off since 2020-02-20; Facebook location event search deprecated). Revisit in v1.1 with a viable strategy (org/Page-scoped ingestion, partner feed, or curation)
 - Howler API contract: contact developers@howler.co.za; add in v1.1 once confirmed
 - Push notifications, user accounts, multi-city: v2 per PRD scope
 
@@ -131,18 +132,22 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 
 ### Data Architecture
 
-**Event Sourcing (OQ-1 — resolved):**
-- Quicket REST API (developer.quicket.co.za) — SA-native ticketed events; API key required
-- Eventbrite REST API — larger paid JHB events; public API
-- Facebook Events Graph API — community/informal events (markets, free gigs); public events readable with app token
-- Howler (howler.co.za) — SA nightlife/festivals; pending API access via developers@howler.co.za; add in v1.1 once confirmed
+**Event Sourcing (OQ-1 — resolved, revised 2026-06-25):**
+
+v1 (active):
+- Quicket REST API (developer.quicket.co.za) — SA-native ticketed events; API key required. Sole programmatic source for v1.
+
+Deferred to v1.1 (no viable public event-discovery API at v1):
+- Eventbrite REST API — public Event Search API removed by Eventbrite on 2020-02-20; only owned-resource listing remains. Revisit via org-scoped ingestion or partner feed.
+- Facebook Events Graph API — public event discovery by location deprecated by Meta; not readable with an app token. Revisit via Page-scoped ingestion (with permissions) or partner feed.
+- Howler (howler.co.za) — SA nightlife/festivals; pending API access via developers@howler.co.za; add once confirmed.
 
 **Backend: Firebase (Firestore + Cloud Functions)**
 - Firestore `events` collection: normalised Event schema (id, name, date, time, venue, address, category, description, price, ticketLink, imageUrl, source, lastUpdated)
 - Firestore indexes: compound index on (category ASC, date ASC) for filtered queries; single index on date ASC for unfiltered feed
 - Security rules: public read on `events` collection; no client writes
-- Scheduled Cloud Functions (one per source): Quicket every 4h, Eventbrite every 4h, Facebook Events every 1h (more volatile), Howler every 4h (when available)
-- Source API keys stored in Firebase Secret Manager (Cloud Functions environment) — never bundled in app
+- Scheduled Cloud Function (v1): Quicket every 4h. Eventbrite/Facebook Events/Howler sync functions deferred to v1.1.
+- Source API keys stored in Firebase Secret Manager (Cloud Functions environment) — never bundled in app; v1 uses the Quicket key only
 - Estimated Firestore reads at 1k MAU: ~3,000/day — within 50,000/day free limit
 - Estimated Cloud Function invocations: ~3,000/month — within 2M/month free limit
 
@@ -157,7 +162,7 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 
 - No auth in v1 (PRD decision); Firestore rules enforce read-only from clients
 - POPIA: no PII collected or stored by app; ad SDK telemetry only; privacy policy must disclose AdMob data practices before App Store submission
-- All third-party API keys (Quicket, Eventbrite, Facebook token) in Cloud Functions environment only; rotatable without app update
+- All third-party API keys (v1: Quicket; v1.1: Eventbrite, Facebook token) in Cloud Functions environment only; rotatable without app update
 
 ---
 
@@ -221,7 +226,7 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 - EAS free tier: 15 iOS + 15 Android builds/month
 
 **Environment Config:**
-- EAS Secrets: Quicket API key, Eventbrite API key, Facebook App Token — injected at build time via app.config.ts
+- EAS Secrets (v1): Quicket API key — injected at build time via app.config.ts. Eventbrite API key + Facebook App Token deferred to v1.1 with their sync functions.
 - Firebase config: committed in google-services.json / GoogleService-Info.plist (standard Firebase pattern; non-secret)
 
 **Monthly cost at launch: ~$8–12/month**
@@ -244,11 +249,11 @@ Expo Go for local dev; hot reload; TypeScript LSP; Expo Dev Tools
 5. Feed screen: EventCard, FilterChips, TanStack Query hook, AdBanner
 6. Event Detail screen: full fields, WebView for ticket links, back nav
 7. Offline/error/empty states (NFR-3, FR-3)
-8. Cloud Functions: Quicket sync, Eventbrite sync, Facebook Events sync
+8. Cloud Functions: Quicket sync (v1). Eventbrite/Facebook Events sync deferred to v1.1.
 9. AdMob interstitial integration (FR-10)
 10. EAS Build + GitHub Actions CI setup
 11. Firebase Crashlytics + Analytics wiring
-12. Howler sync function (when API access confirmed)
+12. v1.1 sync functions: Eventbrite, Facebook Events, Howler (each when a viable source strategy / API access is confirmed)
 
 **Cross-Component Dependencies:**
 - Firebase init must complete before any Firestore reads → initialise in `app/_layout.tsx`
@@ -310,9 +315,9 @@ types/
 functions/
   src/
     syncQuicket.ts
-    syncEventbrite.ts
-    syncFacebookEvents.ts
-    syncHowler.ts
+    syncEventbrite.ts      ← v1.1 (deferred)
+    syncFacebookEvents.ts  ← v1.1 (deferred)
+    syncHowler.ts          ← v1.1 (deferred)
     lib/
       normaliseEvent.ts  ← shared normaliser
       firestoreClient.ts ← shared Firestore write util
@@ -558,11 +563,11 @@ functions/                               ← Firebase Cloud Functions (separate 
     ├── index.ts                         ← exports all scheduled functions
     ├── syncQuicket.ts                   ← Quicket API → Firestore, scheduled every 4h
     ├── syncQuicket.test.ts
-    ├── syncEventbrite.ts                ← Eventbrite API → Firestore, scheduled every 4h
+    ├── syncEventbrite.ts                ← v1.1 (deferred — no public Eventbrite discovery API)
     ├── syncEventbrite.test.ts
-    ├── syncFacebookEvents.ts            ← Facebook Graph API → Firestore, scheduled every 1h
+    ├── syncFacebookEvents.ts            ← v1.1 (deferred — no public Facebook event discovery API)
     ├── syncFacebookEvents.test.ts
-    ├── syncHowler.ts                    ← Howler API → Firestore, every 4h (add when confirmed)
+    ├── syncHowler.ts                    ← v1.1 (deferred — pending Howler API access)
     └── lib/
         ├── normaliseEvent.ts            ← shared normaliser used by all sync functions
         ├── normaliseEvent.test.ts
@@ -587,7 +592,7 @@ functions/                               ← Firebase Cloud Functions (separate 
 - Components receive callback props if they need to trigger navigation
 
 **External API boundary — Cloud Functions only:**
-- Quicket, Eventbrite, Facebook, Howler APIs called only from `functions/src/`
+- Source APIs called only from `functions/src/` (v1: Quicket; v1.1: Eventbrite, Facebook, Howler)
 - API keys never reach the app bundle — stored in Firebase Secret Manager
 
 ---
@@ -595,7 +600,7 @@ functions/                               ← Firebase Cloud Functions (separate 
 ### Data Flow
 
 ```
-[Quicket / Eventbrite / Facebook / Howler APIs]
+[Quicket API]   (v1; Eventbrite / Facebook / Howler deferred to v1.1)
         ↓  scheduled Cloud Functions (write-only)
 [Firestore — events collection]
         ↓  react-native-firebase SDK (read-only)
@@ -617,10 +622,10 @@ functions/                               ← Firebase Cloud Functions (separate 
 
 ### Integration Points
 
-- Quicket REST API — Cloud Functions only; API key in Secret Manager
-- Eventbrite REST API — Cloud Functions only; API key in Secret Manager
-- Facebook Graph API — Cloud Functions only; app token in Secret Manager
-- Howler API — Cloud Functions only (pending); placeholder in syncHowler.ts
+- Quicket REST API — Cloud Functions only; API key in Secret Manager (v1, active)
+- Eventbrite REST API — v1.1 (deferred; no public event-discovery API)
+- Facebook Graph API — v1.1 (deferred; no public event discovery by location)
+- Howler API — v1.1 (deferred; pending API access)
 - Google AdMob — app only; AdMob App ID in app.config.ts (non-secret)
 - Firebase — app + Cloud Functions
 - GitHub PR → ci.yml → Jest + tsc
@@ -662,7 +667,7 @@ All 10 FRs have specific file-level architectural support (see FR-to-Structure M
 Initial Firestore query uses `limit(50)` ordered by date ASC; sufficient at launch. When event count grows, implement `useInfiniteQuery` with Firestore `startAfter()` cursor. `useEvents.ts` accepts optional `pageSize` param (default 50). Story-level implementation detail, not a blocking gap.
 
 **Gap 2 — Cross-source event deduplication:**
-`normaliseEvent()` generates Firestore document ID as `{source}-{slugify(name)}-{date}` (e.g. `quicket-jazz-in-the-gardens-2026-06-14`). Sync functions write with `set({ merge: false })` — last writer wins deterministically. Quicket is the authoritative source when the same event appears on multiple platforms.
+`normaliseEvent()` generates Firestore document ID as `{source}-{slugify(name)}-{date}` (e.g. `quicket-jazz-in-the-gardens-2026-06-14`). Sync functions write with merge semantics. With a single v1 source (Quicket) there is no cross-source overlap to deduplicate; the ID scheme is retained so that when v1.1 adds further sources, last-writer-wins remains deterministic and Quicket stays authoritative when the same event appears on multiple platforms.
 
 **Gap 3 — Accessibility pattern (NFR-4):**
 All interactive components must include:

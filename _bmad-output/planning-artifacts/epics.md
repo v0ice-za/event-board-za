@@ -41,11 +41,11 @@ NFR-5: POPIA compliance; v1 no PII collected/stored by app; data limited to ad S
 - AR-2: Firebase project setup: Firestore `events` collection with Event schema, compound index (category ASC + date ASC), single index (date ASC), public-read / no-client-write security rules
 - AR-3: NativeWind v4 configuration: metro.config.js withNativeWind plugin, tailwind.config.js with Dark Warm custom tokens, nativewind-env.d.ts
 - AR-4: Root layout (`app/_layout.tsx`) initialises QueryClient, Firebase, and AdMob SDK before any screen renders
-- AR-5: Cloud Functions workspace (separate npm workspace): syncQuicket (every 4h), syncEventbrite (every 4h), syncFacebookEvents (every 1h), plus shared normaliseEvent() and firestoreClient utilities; Howler deferred to v1.1
+- AR-5: Cloud Functions workspace (separate npm workspace): syncQuicket (every 4h), plus shared normaliseEvent() and firestoreClient utilities. Eventbrite, Facebook Events, and Howler sync functions deferred to v1.1 (no viable public event-discovery API at v1 — see sprint-change-proposal-2026-06-25.md)
 - AR-6: Event deduplication: normaliseEvent() generates Firestore document ID as `{source}-{slugify(name)}-{date}`; Quicket is authoritative when same event appears on multiple platforms
 - AR-7: GitHub Actions CI (Jest + tsc --noEmit on every PR) + EAS Build on merge to main + EAS Submit on release tag
 - AR-8: Firebase Crashlytics + Firebase Analytics integrated in app via react-native-firebase
-- AR-9: EAS Secrets for API keys (Quicket, Eventbrite, Facebook app token); Firebase config files (google-services.json / GoogleService-Info.plist) committed (non-secret)
+- AR-9: Firebase Secret Manager / EAS Secrets for the Quicket API key (Eventbrite + Facebook secrets deferred with their sync functions to v1.1); Firebase config files (google-services.json / GoogleService-Info.plist) committed (non-secret)
 - AR-10: privacy-policy.md covering POPIA compliance and AdMob telemetry disclosure (NFR-5), required before App Store submission
 
 ### UX Design Requirements
@@ -102,7 +102,7 @@ Users can tap any event card to see full details and tap Tickets to open the boo
 **UX-DRs covered:** UX-DR8, UX-DR10, UX-DR11
 
 ### Epic 4: Data Pipeline
-Real JHB events from Quicket, Eventbrite, and Facebook Events automatically sync to Firestore on schedule with deduplication.
+Real JHB events from Quicket automatically sync to Firestore on schedule. Eventbrite and Facebook Events are deferred to v1.1 (their public event-discovery APIs were removed by the providers); Howler also deferred to v1.1.
 **ARs covered:** AR-5, AR-6
 **FRs supported:** FR-1 (real data)
 
@@ -204,7 +204,7 @@ So that every PR is automatically validated with type-checking and tests, and pr
 **When** the CI/CD pipeline is configured
 **Then** `.github/workflows/ci.yml` runs `tsc --noEmit` and `jest` on every pull request to `main`
 **And** `eas.json` defines `development`, `preview`, and `production` build profiles for both iOS and Android
-**And** `app.config.ts` reads API key values from EAS Secrets via `process.env` (Quicket, Eventbrite, Facebook token keys present but values are placeholder strings in dev)
+**And** `app.config.ts` reads API key values from EAS Secrets via `process.env` (Quicket key present; Eventbrite/Facebook token keys deferred to v1.1 with their sync functions — values are placeholder strings in dev)
 **And** EAS Secrets are configured in the EAS dashboard for the three API key names
 **And** a push to `main` is able to trigger `eas build --platform all --profile production` without configuration errors
 **And** the `ci.yml` workflow completes successfully on the `main` branch
@@ -396,7 +396,7 @@ So that I have all the information I need to decide whether to attend, and can b
 
 ## Epic 4: Data Pipeline
 
-Real JHB events from Quicket, Eventbrite, and Facebook Events automatically sync to Firestore on schedule with deduplication.
+Real JHB events from Quicket automatically sync to Firestore on schedule. Eventbrite and Facebook Events are deferred to v1.1 (their public event-discovery APIs were removed by the providers); Howler also deferred to v1.1. See `sprint-change-proposal-2026-06-25.md`.
 
 ### Story 4.1: Cloud Functions Workspace Setup + firestoreClient Utility
 
@@ -452,41 +452,37 @@ So that Quicket events appear in the feed automatically without manual intervent
 **And** the function logs: start time, events fetched count, events written count, any skipped events with reason
 **And** the function does not throw on a single failed upsert — it logs the error and continues processing remaining events
 
-### Story 4.4: syncEventbrite Cloud Function
+### Story 4.4: syncEventbrite Cloud Function — DEFERRED to v1.1
 
-As a developer,
-I want a scheduled Cloud Function that syncs JHB events from the Eventbrite REST API into Firestore every 4 hours,
-So that Eventbrite events appear in the feed automatically without manual intervention.
+**Status: Deferred (2026-06-25).** Not in v1 scope.
 
-**Acceptance Criteria:**
+**Reason:** Eventbrite removed its public Event Search API (`GET /v3/events/search/`) on
+2020-02-20. No public event-discovery endpoint exists; only owned-resource listing remains
+(`/organizations/{id}/events`, `/venues/{id}/events`, `/events/{id}`). The original premise
+— "fetch upcoming JHB events from Eventbrite's public API" — is not achievable.
+Evidence: https://github.com/Automattic/eventbrite-api/issues/83 ; https://www.eventbrite.com/platform/api
 
-**Given** Stories 4.1 and 4.2 are complete
-**When** `syncEventbrite` runs (scheduled every 4 hours via Firebase Cloud Scheduler)
-**Then** it fetches upcoming events in Johannesburg from the Eventbrite REST API using the `EVENTBRITE_API_KEY` EAS Secret
-**And** it paginates through all result pages until no more events remain
-**And** each raw event is passed through `normaliseEvent(raw, 'eventbrite')`; null results are skipped with a warning log
-**And** each normalised event is written to Firestore via `upsertEvent()` — existing documents are updated (merge), new ones created
-**And** `syncEventbrite` is exported from `functions/src/index.ts` as a Firebase scheduled function with `schedule: 'every 4 hours'` and `timeZone: 'Africa/Johannesburg'`
-**And** the function logs: start time, events fetched count, events written count, any skipped events with reason
-**And** the function does not throw on a single failed upsert — it logs the error and continues processing remaining events
+**Revival conditions for v1.1:** decide a viable strategy — e.g. org-scoped ingestion via a
+curated list of JHB organiser IDs (`/organizations/{id}/events/`), a partner/data agreement,
+or another sourcing approach. Re-scope the ACs accordingly before implementing. The
+`normaliseEvent(raw, 'eventbrite')` + `upsertEvent()` plumbing and the `eventbrite` source
+value remain valid and reusable.
 
-### Story 4.5: syncFacebookEvents Cloud Function
+### Story 4.5: syncFacebookEvents Cloud Function — DEFERRED to v1.1
 
-As a developer,
-I want a scheduled Cloud Function that syncs JHB events from the Facebook Graph API into Firestore every hour,
-So that Facebook events — which change more frequently — appear in the feed with minimal lag.
+**Status: Deferred (2026-06-25).** Not in v1 scope.
 
-**Acceptance Criteria:**
+**Reason:** Facebook/Meta deprecated public event discovery — location/`type=event` search
+via the Graph API is no longer available, and public events are not readable by location
+with an app token. The original premise — "fetch upcoming public JHB events from the Graph
+API" — is not achievable.
+Evidence: https://github.com/tobilg/facebook-events-by-location ; https://developers.facebook.com/docs/graph-api/reference/event/
 
-**Given** Stories 4.1 and 4.2 are complete
-**When** `syncFacebookEvents` runs (scheduled every 1 hour via Firebase Cloud Scheduler)
-**Then** it fetches upcoming public events in Johannesburg from the Facebook Graph API using the `FACEBOOK_APP_TOKEN` EAS Secret
-**And** it handles pagination via the Graph API cursor until no more events remain
-**And** each raw event is passed through `normaliseEvent(raw, 'facebook')`; null results are skipped with a warning log
-**And** each normalised event is written to Firestore via `upsertEvent()` — existing documents are updated (merge), new ones created
-**And** `syncFacebookEvents` is exported from `functions/src/index.ts` as a Firebase scheduled function with `schedule: 'every 1 hours'` and `timeZone: 'Africa/Johannesburg'`
-**And** the function logs: start time, events fetched count, events written count, any skipped events with reason
-**And** the function does not throw on a single failed upsert — it logs the error and continues processing remaining events
+**Revival conditions for v1.1:** decide a viable strategy — e.g. Page-scoped ingestion for a
+curated set of JHB venue/promoter Pages (with required permissions), a partner feed, or
+another sourcing approach. Re-scope the ACs accordingly before implementing. The
+`normaliseEvent(raw, 'facebook')` + `upsertEvent()` plumbing and the `facebook` source value
+remain valid and reusable.
 
 ---
 

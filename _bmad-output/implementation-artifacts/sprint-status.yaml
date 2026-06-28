@@ -22,6 +22,7 @@
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
 #   - done: Story completed
+#   - deferred: Story removed from current version scope (revisit in a later version)
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
@@ -35,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-27
-last_updated: 2026-06-16
+last_updated: 2026-06-28 (consolidated Epic-5 code review: 5-2/5-3/5-4 → done; 7 patches applied; 5-5 stays in-progress for manual EAS gates)
 project: event-board-za
 project_key: NOKEY
 tracking_system: file-system
@@ -57,42 +58,43 @@ development_status:
   # ─── Epic 2: Event Feed ───────────────────────────────────────────────────
   # Users can open the app, browse JHB events in a full-bleed card feed,
   # filter by category, and see loading/empty/error states throughout.
-  epic-2: in-progress
+  epic-2: done
   2-1-categoryplaceholder-component: done
   2-2-eventcard-skeletoncard-components: done
   2-3-categorychip-chipsrow-components: done
-  2-4-empty-error-offline-states-usenetworkstate-hook: backlog
-  2-5-useevents-hook: backlog
-  2-6-event-feed-screen: backlog
-  epic-2-retrospective: optional
+  2-4-empty-error-offline-states-usenetworkstate-hook: done
+  2-5-useevents-hook: done
+  2-6-event-feed-screen: done
+  epic-2-retrospective: done
 
   # ─── Epic 3: Event Detail & Ticketing ─────────────────────────────────────
   # Users can tap any event card to see full details and tap Tickets to open
   # the booking page in-app; back navigation returns to exact scroll position.
-  epic-3: backlog
-  3-1-useeventdetail-hook: backlog
-  3-2-webviewmodal-component: backlog
-  3-3-event-detail-screen: backlog
+  epic-3: done
+  3-1-useeventdetail-hook: done
+  3-2-webviewmodal-component: done
+  3-3-event-detail-screen: done
   epic-3-retrospective: optional
 
   # ─── Epic 4: Data Pipeline ────────────────────────────────────────────────
-  # Real JHB events from Quicket, Eventbrite, and Facebook Events automatically
-  # sync to Firestore on schedule with deduplication. Howler deferred to v1.1.
-  epic-4: backlog
-  4-1-cloud-functions-workspace-setup-firestoreclient-utility: backlog
-  4-2-normaliseevent-utility-full-implementation: backlog
-  4-3-syncquicket-cloud-function: backlog
-  4-4-synceventbrite-cloud-function: backlog
-  4-5-syncfacebookevents-cloud-function: backlog
+  # Real JHB events from Quicket automatically sync to Firestore on schedule.
+  # Eventbrite + Facebook deferred to v1.1 (public event-discovery APIs removed by
+  # providers); Howler also deferred to v1.1. See sprint-change-proposal-2026-06-25.md.
+  epic-4: done
+  4-1-cloud-functions-workspace-setup-firestoreclient-utility: done
+  4-2-normaliseevent-utility-full-implementation: done
+  4-3-syncquicket-cloud-function: done
+  4-4-synceventbrite-cloud-function: deferred   # v1.1 — no public Eventbrite discovery API (removed 2020-02-20)
+  4-5-syncfacebookevents-cloud-function: deferred  # v1.1 — no public Facebook event discovery API
   epic-4-retrospective: optional
 
   # ─── Epic 5: Monetisation & Release ──────────────────────────────────────
   # App is monetised with banner and interstitial ads, instrumented with
   # analytics and crash reporting, POPIA-compliant, and ready for store submission.
-  epic-5: backlog
-  5-1-adbannerunit-component-feed-banner-integration: backlog
-  5-2-interstitial-ad-integration: backlog
-  5-3-firebase-analytics-crashlytics: backlog
-  5-4-privacy-policy-popia-compliance: backlog
-  5-5-app-store-play-store-release-preparation: backlog
+  epic-5: in-progress
+  5-1-adbannerunit-component-feed-banner-integration: done   # per-story review skipped — deferred to one consolidated review at end of Epic 5
+  5-2-interstitial-ad-integration: done            # consolidated Epic-5 review 2026-06-28 — 3 patches applied
+  5-3-firebase-analytics-crashlytics: done         # consolidated Epic-5 review 2026-06-28 — 3 patches applied
+  5-4-privacy-policy-popia-compliance: done        # consolidated Epic-5 review 2026-06-28 — clean
+  5-5-app-store-play-store-release-preparation: in-progress   # review patch applied; manual EAS build/size/screenshot gates still open
   epic-5-retrospective: optional

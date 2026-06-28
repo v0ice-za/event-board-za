@@ -70,7 +70,7 @@ parts: 1
 - Counter SM-C2: long sessions not a goal; 30-second session that converts = success
 
 ## Open Questions & Blockers
-- OQ-1 [BLOCKER]: data sourcing — candidates: Quicket/Eventbrite public APIs, web scraping (legal risk + maintenance burden), manual curation, organiser submissions, hybrid; must resolve before architecture/build; all feed FRs depend on it
+- OQ-1 [RESOLVED 2026-06-25]: data sourcing — v1 = Quicket only (programmatic). Eventbrite + Facebook public event-discovery APIs no longer exist (removed by providers) → deferred to v1.1 with Howler. Eventbrite/Facebook stay valid as Ticket-Link destinations + v2 affiliate candidates. See sprint-change-proposal-2026-06-25.md. (Original candidates: Quicket/Eventbrite public APIs, scraping, manual curation, organiser submissions, hybrid)
 - OQ-2: content quality/moderation — is every event published or is there a curation step? who owns it operationally?
 - OQ-3: data freshness — refresh frequency; handling of cancelled/rescheduled events post-user-view
 - OQ-4: ad SDK — AdMob default; evaluate Meta Audience Network, AppLovin for SA market fill rates before build

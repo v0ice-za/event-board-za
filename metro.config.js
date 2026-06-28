@@ -13,6 +13,8 @@ config.resolver.alias = {
 const nativeOnlyStubs = {
   '@react-native-firebase/app': path.resolve(__dirname, 'lib/__stubs__/firebase-app.js'),
   '@react-native-firebase/firestore': path.resolve(__dirname, 'lib/__stubs__/firebase-firestore.js'),
+  '@react-native-firebase/analytics': path.resolve(__dirname, 'lib/__stubs__/firebase-analytics.js'),
+  '@react-native-firebase/crashlytics': path.resolve(__dirname, 'lib/__stubs__/firebase-crashlytics.js'),
   'react-native-google-mobile-ads': path.resolve(__dirname, 'lib/__stubs__/mobile-ads.js'),
 };
 

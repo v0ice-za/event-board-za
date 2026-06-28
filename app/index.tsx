@@ -1,330 +1,165 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, FlatList, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 
-const CATEGORY_META: Record<string, { icon: string }> = {
-  'All':          { icon: '⚡' },
-  'Music':        { icon: '🎵' },
-  'Markets':      { icon: '🛍️' },
-  'Food & Drink': { icon: '🍽️' },
-  'Art & Culture':{ icon: '🎨' },
-  'Sport':        { icon: '⚽' },
-  'Comedy':       { icon: '😂' },
-  'Family':       { icon: '🎡' },
-  'Nightlife':    { icon: '🌙' },
-};
+import { AdBannerUnit } from '@/components/AdBannerUnit';
+import { ChipsRow } from '@/components/ChipsRow';
+import { EmptyState } from '@/components/EmptyState';
+import { EventCard } from '@/components/EventCard';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { SkeletonCard } from '@/components/SkeletonCard';
+import { SkeletonChipsRow } from '@/components/SkeletonChipsRow';
+import { useEvents } from '@/hooks/useEvents';
+import { useNetworkState } from '@/hooks/useNetworkState';
+import { logCategoryFilter, logScreenView } from '@/lib/analytics';
+import type { Category, Event } from '@/types';
 
-const CATEGORIES = Object.keys(CATEGORY_META);
+// FR-9: a live <AdBannerUnit/> is interleaved at every Nth feed position.
+const AD_INTERVAL = 6;
 
-const EVENTS = [
-  {
-    id: '1',
-    title: 'Sama Vibez Summer Festival',
-    category: 'Music',
-    date: 'Sat 7 Jun',
-    venue: 'Expo Centre, Nasrec',
-    price: 'R350',
-    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900&q=85',
-    featured: true,
-    badge: 'SELLING FAST',
-    going: 847,
-  },
-  {
-    id: '2',
-    title: 'Neighbourgoods Market',
-    category: 'Markets',
-    date: 'Sun 8 Jun',
-    venue: 'Braamfontein',
-    price: 'Free',
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&q=85',
-    going: 312,
-  },
-  {
-    id: '3',
-    title: 'Eat Out Restaurant Awards',
-    category: 'Food & Drink',
-    date: 'Fri 6 Jun',
-    venue: 'Sandton Convention Centre',
-    price: 'R180',
-    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=85',
-    badge: 'TONIGHT',
-    going: 204,
-  },
-  {
-    id: '4',
-    title: 'Joburg Art Fair 2026',
-    category: 'Art & Culture',
-    date: 'Sat 7 Jun',
-    venue: 'Sandton City',
-    price: 'R120',
-    image: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=900&q=85',
-    going: 156,
-  },
-  {
-    id: '5',
-    title: 'Chiefs vs Pirates — Derby',
-    category: 'Sport',
-    date: 'Sun 8 Jun',
-    venue: 'FNB Stadium, Soweto',
-    price: 'R200',
-    image: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=900&q=85',
-    badge: 'SELLING FAST',
-    going: 1204,
-  },
-  {
-    id: '6',
-    title: 'Loyiso Gola: Live at Monte',
-    category: 'Comedy',
-    date: 'Thu 5 Jun',
-    venue: 'Montecasino, Fourways',
-    price: 'R250',
-    image: 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=900&q=85',
-    going: 98,
-  },
-  {
-    id: '7',
-    title: 'Dino Park Family Day',
-    category: 'Family',
-    date: 'Sat 7 Jun',
-    venue: 'Sci-Bono, Newtown',
-    price: 'R90',
-    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=900&q=85',
-    going: 431,
-  },
-  {
-    id: '8',
-    title: 'Amnesia Saturday Sessions',
-    category: 'Nightlife',
-    date: 'Sat 7 Jun',
-    venue: 'Melville, JHB',
-    price: 'R150',
-    image: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=900&q=85',
-    going: 567,
-  },
-];
-
-type Event = typeof EVENTS[number];
-
-function EventCard({ event, hero = false }: { event: Event; hero?: boolean }) {
-  const [saved, setSaved] = useState(false);
-  const height = hero ? 360 : 248;
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.92}
-      style={{ borderRadius: 24, overflow: 'hidden', height }}
-    >
-      {/* Background image */}
-      <Image
-        source={{ uri: event.image }}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-        contentFit="cover"
-        transition={300}
-      />
-
-      {/* Top scrim — keeps badge + heart readable over any image */}
-      <LinearGradient
-        colors={['rgba(15,12,9,0.65)', 'transparent']}
-        style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 90 }}
-      />
-
-      {/* Bottom gradient — readable text over any image */}
-      <LinearGradient
-        colors={['transparent', 'rgba(15,12,9,0.6)', 'rgba(15,12,9,0.97)']}
-        locations={[0, 0.4, 1]}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: hero ? 260 : 190 }}
-      />
-
-      {/* Top row: badge + save */}
-      <View style={{ position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        {event.badge ? (
-          <View style={{
-            backgroundColor: event.badge === 'TONIGHT' ? '#FF6B35' : 'rgba(15,12,9,0.55)',
-            borderRadius: 8,
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            borderWidth: 1,
-            borderColor: event.badge === 'TONIGHT' ? '#FF6B35' : 'rgba(255,107,53,0.5)',
-          }}>
-            <Text style={{
-              fontFamily: 'Inter_700Bold',
-              fontSize: 10,
-              color: event.badge === 'TONIGHT' ? '#fff' : '#FF6B35',
-              letterSpacing: 1.2,
-            }}>
-              {event.badge}
-            </Text>
-          </View>
-        ) : <View />}
-
-        <TouchableOpacity
-          onPress={() => setSaved((s) => !s)}
-          style={{
-            width: 36, height: 36, borderRadius: 18,
-            backgroundColor: 'rgba(15,12,9,0.55)',
-            borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-            alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 16 }}>{saved ? '❤️' : '🤍'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Bottom content */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 18 }}>
-        {/* Category + going */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <View style={{
-            backgroundColor: '#FF6B35',
-            borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4,
-          }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#fff' }}>
-              {CATEGORY_META[event.category]?.icon} {event.category}
-            </Text>
-          </View>
-          {event.going > 0 && (
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(245,240,232,0.6)' }}>
-              🔥 {event.going.toLocaleString()} going
-            </Text>
-          )}
-        </View>
-
-        {/* Title */}
-        <Text style={{
-          fontFamily: 'Inter_700Bold',
-          fontSize: hero ? 24 : 19,
-          color: '#F5F0E8',
-          lineHeight: hero ? 30 : 25,
-          marginBottom: 8,
-        }}>
-          {event.title}
-        </Text>
-
-        {/* Date + venue + price */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text numberOfLines={1} style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: 'rgba(245,240,232,0.6)', flex: 1, marginRight: 12 }}>
-            📅 {event.date} · {event.venue}
-          </Text>
-          <View style={{
-            backgroundColor: 'rgba(255,107,53,0.18)',
-            borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
-            borderWidth: 1, borderColor: 'rgba(255,107,53,0.4)',
-          }}>
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: '#FF6B35' }}>
-              {event.price}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
+/**
+ * Feed screen (Epic 2 capstone). Composes ChipsRow + useEvents + EventCard/SkeletonCard +
+ * EmptyState/OfflineBanner + useNetworkState into the live JHB event feed. UI state
+ * (active category) is session-local useState; server state is TanStack Query via useEvents.
+ * Navigation (router.push) lives here per the screen-only navigation boundary.
+ */
 export default function FeedScreen() {
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const { events, isLoading, isError, refetch } = useEvents(activeCategory);
+  const { isConnected } = useNetworkState();
+  const router = useRouter();
+  const listRef = useRef<FlatList<Event>>(null);
+  // Top safe-area inset applied via the hook (not <SafeAreaView>) so the screen composes a
+  // plain View — avoids the NativeWind×safe-area-context cssInterop wrapper. Provider lives
+  // in app/_layout.tsx. paddingTop is runtime-driven → the documented dynamic-style exception.
+  const insets = useSafeAreaInsets();
 
-  const filtered = activeCategory === 'All'
-    ? EVENTS
-    : EVENTS.filter((e) => e.category === activeCategory);
+  // UX-DR12: on return to foreground, reset the feed to top + soft background refresh.
+  // Soft because useEvents.isLoading is cold-load-only — refetch() will not re-skeleton.
+  // refetch is held in a ref so the listener subscribes exactly once: useEvents returns a
+  // fresh refetch identity each render, so [refetch] deps would re-subscribe every render.
+  const refetchRef = useRef(refetch);
+  useEffect(() => {
+    refetchRef.current = refetch;
+  }, [refetch]);
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appState.current;
+      appState.current = next;
+      // Only a true background→active transition refreshes. iOS emits a transient
+      // `inactive` for Control Center / notification shade / biometric prompts — those
+      // must NOT scroll-to-top or refetch (would yank the user mid-scroll).
+      if (next === 'active' && prev === 'background') {
+        listRef.current?.scrollToOffset({ offset: 0, animated: false });
+        refetchRef.current();
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
-  const [hero, ...rest] = filtered;
+  // Analytics: log the feed screen view once on mount. Above the early return below so it
+  // is rules-of-hooks safe (effects must run on every render path).
+  useEffect(() => {
+    logScreenView('Feed');
+  }, []);
+
+  // FR-7: tapping the active chip (or "All") resets to all events; ChipsRow emits the
+  // tapped category itself and does not self-toggle, so the toggle-off lives here.
+  const handleSelect = (category: Category | null) => {
+    // Log only a real new selection. Skip the All chip (null) and the toggle-off case
+    // (tapping the already-active chip, which clears the filter back to All).
+    if (category !== null && category !== activeCategory) {
+      logCategoryFilter(category);
+    }
+    setActiveCategory((prev) => (prev === category ? null : category));
+  };
+
+  // Initial cold load only (AC #5): full skeleton — skeleton chips + exactly 3 skeleton
+  // cards, no spinner. Gated to the first load (activeCategory === null); a per-category
+  // cold load keeps the interactive ChipsRow and skeletons only the list region (below).
+  if (isLoading && activeCategory === null) {
+    return (
+      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+        <StatusBar style="light" />
+        <View className="px-4 py-3">
+          <SkeletonChipsRow />
+        </View>
+        <View>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      </View>
+    );
+  }
+
+  // Render-precedence (first match wins): per-category cold load → offline-empty →
+  // error-empty → empty → list.
+  const renderBody = () => {
+    // Per-category cold load (activeCategory !== null): ChipsRow stays mounted above;
+    // skeleton only the list region so the user keeps their chip anchor on a filter tap.
+    if (isLoading) {
+      return (
+        <View>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      );
+    }
+    if (!isConnected && events.length === 0) {
+      return <EmptyState variant="no-connection" onAction={refetch} />;
+    }
+    if (isError && events.length === 0) {
+      return <EmptyState variant="general-error" onAction={refetch} />;
+    }
+    if (events.length === 0) {
+      return (
+        <EmptyState
+          variant="empty-category"
+          category={activeCategory}
+          onAction={() => setActiveCategory(null)}
+        />
+      );
+    }
+    return (
+      <>
+        {!isConnected && <OfflineBanner />}
+        <FlatList
+          ref={listRef}
+          data={events}
+          keyExtractor={(item) => item.id}
+          accessible={false}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={7}
+          removeClippedSubviews
+          renderItem={({ item, index }) => (
+            <>
+              <EventCard event={item} onPress={() => router.push(`/event/${item.id}`)} />
+              {/* Ad after every 6th card, but never as the final row (index + 1 < length)
+                  so a feed whose length is an exact multiple of 6 doesn't end on an ad. */}
+              {(index + 1) % AD_INTERVAL === 0 && index + 1 < events.length && (
+                <AdBannerUnit testID="feed-ad-slot" />
+              )}
+            </>
+          )}
+        />
+      </>
+    );
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0C09' }}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <View>
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 30, color: '#F5F0E8', letterSpacing: -0.5 }}>
-              Event Board ZA
-            </Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: '#8A7E70', marginTop: 2 }}>
-              📍 Johannesburg · What&apos;s on this week
-            </Text>
-          </View>
-          <TouchableOpacity style={{
-            width: 40, height: 40, borderRadius: 20,
-            backgroundColor: '#1C1814',
-            borderWidth: 1, borderColor: '#2A2420',
-            alignItems: 'center', justifyContent: 'center',
-            marginTop: 4,
-          }}>
-            <Text style={{ fontSize: 17 }}>🔍</Text>
-          </TouchableOpacity>
-        </View>
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+      <StatusBar style="light" />
+      <View className="px-4 py-3">
+        <ChipsRow activeCategory={activeCategory} onSelect={handleSelect} />
       </View>
-
-      {/* Category chips */}
-      <View style={{ height: 42 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 8, alignItems: 'center' }}
-          style={{ flex: 1 }}
-        >
-          {CATEGORIES.map((cat) => {
-            const active = activeCategory === cat;
-            return (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setActiveCategory(cat)}
-                style={{
-                  paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999,
-                  backgroundColor: active ? '#FF6B35' : '#1C1814',
-                  borderWidth: 1,
-                  borderColor: active ? '#FF6B35' : '#2A2420',
-                }}
-              >
-                <Text style={{
-                  fontFamily: active ? 'Inter_600SemiBold' : 'Inter_400Regular',
-                  fontSize: 13,
-                  color: active ? '#fff' : '#8A7E70',
-                }}>
-                  {CATEGORY_META[cat]?.icon} {cat}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Divider */}
-      <View style={{ height: 1, backgroundColor: '#1C1814', marginTop: 14, marginHorizontal: 20 }} />
-
-      {/* Feed */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 48, gap: 14 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Section label */}
-        {filtered.length > 0 && (
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#8A7E70', letterSpacing: 1.2, marginBottom: 2 }}>
-            {activeCategory === 'All' ? 'THIS WEEK IN JHB' : activeCategory.toUpperCase()}
-          </Text>
-        )}
-
-        {/* Hero card */}
-        {hero && <EventCard event={hero} hero />}
-
-        {/* Rest of cards */}
-        {rest.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-
-        {/* End of feed */}
-        <View style={{ alignItems: 'center', paddingTop: 8 }}>
-          <View style={{ width: 40, height: 1, backgroundColor: '#2A2420', marginBottom: 12 }} />
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#2A2420' }}>
-            {filtered.length === 1
-              ? `1 event · check back soon`
-              : `${filtered.length} events · updated daily`}
-          </Text>
-        </View>
-      </ScrollView>
+      <View className="flex-1">{renderBody()}</View>
     </View>
   );
 }

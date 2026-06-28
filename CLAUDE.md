@@ -10,7 +10,7 @@ Tech stack: React Native · iOS 15.0+ · Android 9.0+ (API 28) · Apple App Stor
 
 Planning complete. Ready for implementation. Sprint plan generated.
 
-**OQ-1 resolved:** Hybrid data sourcing — Quicket + Eventbrite + Facebook Events + Howler (pending API contact at developers@howler.co.za).
+**OQ-1 resolved (revised 2026-06-25):** v1 sources to **Quicket only**. Eventbrite + Facebook Events deferred to v1.1 — their public event-discovery APIs were removed by the providers (Eventbrite Search API off since 2020-02-20; Facebook location event search deprecated). Howler also deferred to v1.1 (pending developers@howler.co.za). See `_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-25.md`.
 
 Next steps:
 1. `/bmad-create-story` — Create the next story file (start with Story 1.1)
